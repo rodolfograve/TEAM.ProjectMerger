@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEAM.ProjectMerger.VsPackage", "TEAM.ProjectMerger.VsPackage\TEAM.ProjectMerger.VsPackage.csproj", "{14F2C5E1-7DB7-485A-B102-E50C112E7C9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEAM.ProjectMerger.IntegrationTests", "TEAM.ProjectMerger.IntegrationTests\TEAM.ProjectMerger.IntegrationTests.csproj", "{AB229A4A-BFC9-4FE3-A994-C4ADF2DC59D5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{16B147B2-FBA8-4B73-BF20-BCC375914160}"
+	ProjectSection(SolutionItems) = preProject
+		IntegrationTests.testsettings = IntegrationTests.testsettings
+		UnitTests.testsettings = UnitTests.testsettings
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEAM.ProjectMerger.UnitTests", "TEAM.ProjectMerger.UnitTests\TEAM.ProjectMerger.UnitTests.csproj", "{B560AB03-25CA-4E60-8012-1A8FA00EE627}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TEAM.ProjectMerger", "TEAM.ProjectMerger\TEAM.ProjectMerger.csproj", "{4BB8F49B-02AE-4D69-A4B4-8798C8ACD9C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14F2C5E1-7DB7-485A-B102-E50C112E7C9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14F2C5E1-7DB7-485A-B102-E50C112E7C9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14F2C5E1-7DB7-485A-B102-E50C112E7C9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14F2C5E1-7DB7-485A-B102-E50C112E7C9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB229A4A-BFC9-4FE3-A994-C4ADF2DC59D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB229A4A-BFC9-4FE3-A994-C4ADF2DC59D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB229A4A-BFC9-4FE3-A994-C4ADF2DC59D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB229A4A-BFC9-4FE3-A994-C4ADF2DC59D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B560AB03-25CA-4E60-8012-1A8FA00EE627}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B560AB03-25CA-4E60-8012-1A8FA00EE627}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B560AB03-25CA-4E60-8012-1A8FA00EE627}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B560AB03-25CA-4E60-8012-1A8FA00EE627}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BB8F49B-02AE-4D69-A4B4-8798C8ACD9C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BB8F49B-02AE-4D69-A4B4-8798C8ACD9C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BB8F49B-02AE-4D69-A4B4-8798C8ACD9C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BB8F49B-02AE-4D69-A4B4-8798C8ACD9C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

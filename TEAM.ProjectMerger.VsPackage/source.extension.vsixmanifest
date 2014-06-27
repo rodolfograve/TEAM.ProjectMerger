@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="124be291-dc59-4cfa-b045-421d346fdc9c" Version="0.0.1" Language="en-US" Publisher="TEAM" />
+    <DisplayName>TEAM.ProjectMerger</DisplayName>
+    <Description>The number of projects in a solution negatively affects the build time. Since modularisation is good there is a trade-off between these 2. Using folders and namespaces instead of projects is another way to achieve modularisation.
+
+This VSPackage attempts to provide help when trying to optimise the solution structure by automating the process of merging multiple projects into one which is one of the main deterrents to experiment with the solution structure.</Description>
+  </Metadata>
+  <Installation InstalledByMsi="false">
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[12.0]" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+    <Dependency Id="Microsoft.VisualStudio.MPF.12.0" DisplayName="Visual Studio MPF 12.0" d:Source="Installed" Version="[12.0]" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+  </Assets>
+</PackageManifest>

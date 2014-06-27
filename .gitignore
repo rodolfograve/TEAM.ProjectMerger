@@ -1,0 +1,26 @@
+bin/
+obj/
+sql/
+packages/
+Debug/
+Release/
+ContractSuggestions/
+_NCrunch*/
+NDependOut/
+TestResults/
+.nuget/
+#The Web.config file is generated from Web.Template.config by the XML Transform process
+Trayport.ClearingHub.DealsManager/Web.config
+*.ide/
+*.suo
+*.user
+*.dbmdl
+*.bak
+*.dacpac
+*.log
+*Log.log.*
+*.orig
+*.playlist
+nCrunchTemp*
+dotCoverNDepend.xml
+*.TMP
