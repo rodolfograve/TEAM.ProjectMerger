@@ -25,7 +25,7 @@ namespace TEAM.TEAM_ProjectMerger
                     0,
                     ref clsid,
                     "TEAM.ProjectMerger",
-                    "Inside " + ToString() + ".MenuItemCallback()",
+                    message,
                     string.Empty,
                     0,
                     OLEMSGBUTTON.OLEMSGBUTTON_OK,

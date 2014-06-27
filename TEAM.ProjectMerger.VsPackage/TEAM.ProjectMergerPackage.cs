@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
+using System.Collections.Generic;
+using EnvDTE;
 
 namespace TEAM.TEAM_ProjectMerger
 {
@@ -36,6 +39,7 @@ namespace TEAM.TEAM_ProjectMerger
       private OutputWindow OutputWindow;
       private Shell Shell;
       private MonitorSelection MonitorSelection;
+      private Solution Solution;
 
       /// <summary>
       /// Initialization of the package; this method is called right after the package is sited, so this is the place where you can put all the initialization code that rely on services provided by VisualStudio.
@@ -58,6 +62,7 @@ namespace TEAM.TEAM_ProjectMerger
          OutputWindow = OutputWindow.Create(GetService(typeof(SVsOutputWindow)) as IVsOutputWindow);
          Shell = new Shell((IVsUIShell)GetService(typeof(SVsUIShell)));
          MonitorSelection = new MonitorSelection(((IVsMonitorSelection)Package.GetGlobalService(typeof(SVsShellMonitorSelection))));
+         Solution = new Solution((IVsSolution)GetService(typeof(IVsSolution)));
       }
 
       /// <summary>
@@ -70,7 +75,100 @@ namespace TEAM.TEAM_ProjectMerger
 
          var selectedProjects = MonitorSelection.GetSelectedProjects();
 
+         if (selectedProjects.Length <= 1)
+         {
+            Shell.MessageBox("You must select more than 1 project in order to merge them.");
+         }
+         else
+         {
+            var targetProject = selectedProjects[0];
+            OutputWindow.WriteLine("Joining all selected projects [" + ToStringList(selectedProjects) + "] into " + targetProject.Name);
+
+            var invalidProjectKinds = selectedProjects.Where(x => x.Kind != targetProject.Kind).ToArray();
+            if (invalidProjectKinds.Any())
+            {
+               var message = "The following projects have different Kinds to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectKinds);
+               OutputWindow.WriteLine(message);
+               Shell.MessageBox(message);
+            }
+
+            var targetProjectFlavour = Solution.GetProjectTypeGuids(targetProject);
+            var invalidProjectFlavours = selectedProjects.Where(x => Solution.GetProjectTypeGuids(x) != targetProjectFlavour).ToArray();
+            if (invalidProjectFlavours.Any())
+            {
+               var message = "The following projects have different 'flavours' to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectFlavours);
+               OutputWindow.WriteLine(message);
+               Shell.MessageBox(message);
+            }
+
+            if (!invalidProjectKinds.Any() && !invalidProjectFlavours.Any())
+            {
+               foreach (var project in selectedProjects.Where(x => x != targetProject))
+               {
+                  MergeProjects(project, targetProject);
+               }
+            }
+         }
+
          OutputWindow.WriteLine("TEAM.MergeProjects finished.");
+      }
+
+      public void MergeProjects(Project sourceProject, Project targetProject)
+      {
+         var projectName = sourceProject.Name;
+         var targetRootPath = targetProject.FullName;
+         OutputWindow.WriteLine("Merging project " + projectName + " into project " + targetProject.Name);
+         sourceProject.Save();
+         foreach (ProjectItem item in sourceProject.ProjectItems)
+         {
+            string itemName = item.Name;
+            OutputWindow.WriteLine("Moving item " + itemName + " from project " + projectName + " into project " + targetProject.Name);
+            if (item.IsOpen && item.IsDirty)
+            {
+               item.Save();
+            }
+            for (short i = 0; i < item.FileCount; i++)
+            {
+               switch (item.Kind)
+               {
+                  case EnvDTE.Constants.vsProjectItemKindPhysicalFolder:
+                     {
+                        var directoryName = item.Name;
+                        OutputWindow.WriteLine("Moving directory " + directoryName + " from project " + projectName + " into project " + targetProject.Name);
+                        //targetProject.ProjectItems.AddFromFileCopy(directoryName);
+                        OutputWindow.WriteLine("Moved directory " + directoryName + " from project " + projectName + " into project " + targetProject.Name);
+                        break;
+                     };
+                  case EnvDTE.Constants.vsProjectItemKindPhysicalFile:
+                     {
+                        var fileName = item.FileNames[i];
+                        OutputWindow.WriteLine("Moving file " + fileName + " from project " + projectName + " into project " + targetProject.Name);
+                        targetProject.ProjectItems.AddFromFileCopy(fileName);
+                        OutputWindow.WriteLine("Moved file " + fileName + " from project " + projectName + " into project " + targetProject.Name);
+                        break;
+                     };
+                  default:
+                     {
+                        OutputWindow.WriteLine("Unsupported item Kind " + item.Kind + ". This item won't be moved to the project " + targetProject.Name + ".");
+                        break;
+                     }
+               }
+            }
+            item.Delete();
+            OutputWindow.WriteLine("Moved item " + itemName + " from project " + projectName + " into project " + targetProject.Name);
+         }
+         sourceProject.Save();
+         sourceProject.Delete();
+         OutputWindow.WriteLine("Merged project " + projectName + " into project " + targetProject.Name);
+      }
+
+      private string ToStringList(IEnumerable<Project> projects, Func<Project, string> selector = null)
+      {
+         if (selector == null)
+         {
+            selector = x => x.Name + "(Kind=" + x.Kind + ", Flavours=" + Solution.GetProjectTypeGuids(x) + ")";
+         }
+         return string.Join(Environment.NewLine + "- ", projects.Select(selector).ToArray());
       }
 
    }
