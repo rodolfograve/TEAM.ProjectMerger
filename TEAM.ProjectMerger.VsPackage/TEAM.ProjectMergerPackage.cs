@@ -75,66 +75,70 @@ namespace TEAM.TEAM_ProjectMerger
       {
          OutputWindow.WriteLine("TEAM.MergeProjects invoked...");
 
-         var selectedProjects = MonitorSelection.GetSelectedProjects();
-
-         if (selectedProjects.Length <= 1)
+         try
          {
-            Shell.MessageBox("You must select more than 1 project in order to merge them.");
-         }
-         else
-         {
-            var targetProject = selectedProjects[0];
-            OutputWindow.WriteLine("Joining all selected projects [" + ToStringList(selectedProjects) + "] into " + targetProject.Name);
+            var selectedProjects = MonitorSelection.GetSelectedProjects();
 
-            var invalidProjectKinds = selectedProjects.Where(x => x.Kind != targetProject.Kind).ToArray();
-            if (invalidProjectKinds.Any())
+            if (selectedProjects.Length <= 1)
             {
-               var message = "The following projects have different Kinds to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectKinds);
-               OutputWindow.WriteLine(message);
-               Shell.MessageBox(message);
+               MessageBox("You must select more than 1 project in order to merge them.");
             }
-
-            var targetProjectFlavour = Solution.GetProjectTypeGuids(targetProject);
-            var invalidProjectFlavours = selectedProjects.Where(x => Solution.GetProjectTypeGuids(x) != targetProjectFlavour).ToArray();
-            if (invalidProjectFlavours.Any())
+            else
             {
-               var message = "The following projects have different 'flavours' to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectFlavours);
-               OutputWindow.WriteLine(message);
-               Shell.MessageBox(message);
-            }
+               var targetProject = selectedProjects[0];
+               OutputWindow.WriteLine("Joining all selected projects [" + ToStringList(selectedProjects) + "] into " + targetProject.Name);
 
-            if (!invalidProjectKinds.Any() && !invalidProjectFlavours.Any())
-            {
-               foreach (var project in selectedProjects.Where(x => x != targetProject))
+               var invalidProjectKinds = selectedProjects.Where(x => x.Kind != targetProject.Kind).ToArray();
+               if (invalidProjectKinds.Any())
                {
-                  MergeProjects(project, targetProject);
+                  MessageBox("The following projects have different Kinds to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectKinds));
+               }
+
+               var targetProjectFlavour = Solution.GetProjectTypeGuids(targetProject);
+               var invalidProjectFlavours = selectedProjects.Where(x => Solution.GetProjectTypeGuids(x) != targetProjectFlavour).ToArray();
+               if (invalidProjectFlavours.Any())
+               {
+                  MessageBox("The following projects have different 'flavours' to project " + targetProject.Name + " and cannot be safely merged. Change your selection: " + ToStringList(invalidProjectFlavours));
+               }
+
+               if (!invalidProjectKinds.Any() && !invalidProjectFlavours.Any())
+               {
+                  foreach (var project in selectedProjects.Where(x => x != targetProject))
+                  {
+                     MergeProjects(project, targetProject);
+                  }
                }
             }
+            MessageBox("TEAM.MergeProjects finished OK.");
          }
-
-         OutputWindow.WriteLine("TEAM.MergeProjects finished.");
+         catch (Exception ex)
+         {
+            MessageBox("There was an error while trying to merge the projects: " + ex);
+         }
       }
 
-      public void MergeProjects(Project sourceProject, Project targetProject)
+      public async void MergeProjects(Project sourceProject, Project targetProject)
       {
-         var projectName = sourceProject.Name;
-         OutputWindow.WriteLine("Merging project " + projectName + " into project " + targetProject.Name);
+         var sourceProjectName = sourceProject.Name;
+         OutputWindow.WriteLine("Merging project " + sourceProjectName + " into project " + targetProject.Name);
          sourceProject.Save();
 
-         // Create a directory in the targetProject in order to keep a similar structure
-         var targetDirectory = targetProject.ProjectItems.AddFolder(sourceProject.Name);
+         var targetProjectStrategy = new CSharpProject(targetProject);
 
-         MoveProjectItems(sourceProject.ProjectItems, targetDirectory.ProjectItems, sourceProject.Name, targetProject.Name + "/" + targetDirectory.Name);
+         // Create a directory in the targetProject in order to keep a similar structure
+         var targetDirectory = await targetProjectStrategy.AddFolder(sourceProject.Name);
+
+         MoveProjectItems(sourceProject.ProjectItems, targetDirectory, sourceProject.Name, targetProject.Name + "/" + sourceProjectName);
 
          targetProject.Save();
          sourceProject.Save();
 
          Dte.Solution.Remove(sourceProject);
 
-         OutputWindow.WriteLine("Merged project " + projectName + " into project " + targetProject.Name);
+         OutputWindow.WriteLine("Merged project " + sourceProjectName + " into project " + targetProject.Name);
       }
 
-      private void MoveProjectItems(ProjectItems sourceProjectItems, ProjectItems targetProjectItems, string sourceName, string targetName)
+      private async void MoveProjectItems(ProjectItems sourceProjectItems, IFolder targetFolder, string sourceName, string targetName)
       {
          foreach (ProjectItem item in sourceProjectItems)
          {
@@ -155,8 +159,8 @@ namespace TEAM.TEAM_ProjectMerger
                         {
                            var directoryName = item.Name;
                            OutputWindow.WriteLine("Moving directory " + directoryName + " from project " + sourceName + " into project " + targetName);
-                           var newDirectory = targetProjectItems.AddFolder(directoryName);
-                           MoveProjectItems(item.ProjectItems, newDirectory.ProjectItems, sourceName + "/" + directoryName, targetName + "/" + directoryName);
+                           var newDirectory = await targetFolder.AddFolder(directoryName);
+                           MoveProjectItems(item.ProjectItems, newDirectory, sourceName + "/" + directoryName, targetName + "/" + directoryName);
                            OutputWindow.WriteLine("Moved directory " + directoryName + " from project " + sourceName + " into project " + targetName);
                            break;
                         };
@@ -164,7 +168,7 @@ namespace TEAM.TEAM_ProjectMerger
                         {
                            var fileName = item.FileNames[i];
                            OutputWindow.WriteLine("Moving file " + fileName + " from project " + sourceName + " into project " + targetName);
-                           var newItem = targetProjectItems.AddFromFileCopy(fileName);
+                           targetFolder.AddFromFileCopy(fileName);
                            OutputWindow.WriteLine("Moved file " + fileName + " from project " + sourceName + " into project " + targetName);
                            break;
                         };
@@ -188,6 +192,12 @@ namespace TEAM.TEAM_ProjectMerger
       private bool CanBeMigrated(ProjectItem item)
       {
          return !(item.Kind == EnvDTE.Constants.vsProjectItemKindPhysicalFolder && item.Name == "Properties");
+      }
+
+      private void MessageBox(string message)
+      {
+         OutputWindow.WriteLine(message);
+         Shell.MessageBox(message);
       }
 
       private string ToStringList(IEnumerable<Project> projects, Func<Project, string> selector = null)
