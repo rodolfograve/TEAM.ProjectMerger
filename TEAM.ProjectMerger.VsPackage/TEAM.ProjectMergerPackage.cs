@@ -40,6 +40,7 @@ namespace TEAM.TEAM_ProjectMerger
       private Shell Shell;
       private MonitorSelection MonitorSelection;
       private Solution Solution;
+      private DTE Dte;
 
       /// <summary>
       /// Initialization of the package; this method is called right after the package is sited, so this is the place where you can put all the initialization code that rely on services provided by VisualStudio.
@@ -63,6 +64,7 @@ namespace TEAM.TEAM_ProjectMerger
          Shell = new Shell((IVsUIShell)GetService(typeof(SVsUIShell)));
          MonitorSelection = new MonitorSelection(((IVsMonitorSelection)Package.GetGlobalService(typeof(SVsShellMonitorSelection))));
          Solution = new Solution((IVsSolution)GetService(typeof(IVsSolution)));
+         Dte = (DTE)GetService(typeof(DTE));
       }
 
       /// <summary>
@@ -116,50 +118,76 @@ namespace TEAM.TEAM_ProjectMerger
       public void MergeProjects(Project sourceProject, Project targetProject)
       {
          var projectName = sourceProject.Name;
-         var targetRootPath = targetProject.FullName;
          OutputWindow.WriteLine("Merging project " + projectName + " into project " + targetProject.Name);
          sourceProject.Save();
-         foreach (ProjectItem item in sourceProject.ProjectItems)
+
+         // Create a directory in the targetProject in order to keep a similar structure
+         var targetDirectory = targetProject.ProjectItems.AddFolder(sourceProject.Name);
+
+         MoveProjectItems(sourceProject.ProjectItems, targetDirectory.ProjectItems, sourceProject.Name, targetProject.Name + "/" + targetDirectory.Name);
+
+         targetProject.Save();
+         sourceProject.Save();
+
+         Dte.Solution.Remove(sourceProject);
+
+         OutputWindow.WriteLine("Merged project " + projectName + " into project " + targetProject.Name);
+      }
+
+      private void MoveProjectItems(ProjectItems sourceProjectItems, ProjectItems targetProjectItems, string sourceName, string targetName)
+      {
+         foreach (ProjectItem item in sourceProjectItems)
          {
             string itemName = item.Name;
-            OutputWindow.WriteLine("Moving item " + itemName + " from project " + projectName + " into project " + targetProject.Name);
             if (item.IsOpen && item.IsDirty)
             {
                item.Save();
             }
-            for (short i = 0; i < item.FileCount; i++)
+
+            if (CanBeMigrated(item))
             {
-               switch (item.Kind)
+               OutputWindow.WriteLine("Moving item " + itemName + " from project " + sourceName + " into project " + targetName);
+               for (short i = 0; i < item.FileCount; i++)
                {
-                  case EnvDTE.Constants.vsProjectItemKindPhysicalFolder:
-                     {
-                        var directoryName = item.Name;
-                        OutputWindow.WriteLine("Moving directory " + directoryName + " from project " + projectName + " into project " + targetProject.Name);
-                        //targetProject.ProjectItems.AddFromFileCopy(directoryName);
-                        OutputWindow.WriteLine("Moved directory " + directoryName + " from project " + projectName + " into project " + targetProject.Name);
-                        break;
-                     };
-                  case EnvDTE.Constants.vsProjectItemKindPhysicalFile:
-                     {
-                        var fileName = item.FileNames[i];
-                        OutputWindow.WriteLine("Moving file " + fileName + " from project " + projectName + " into project " + targetProject.Name);
-                        targetProject.ProjectItems.AddFromFileCopy(fileName);
-                        OutputWindow.WriteLine("Moved file " + fileName + " from project " + projectName + " into project " + targetProject.Name);
-                        break;
-                     };
-                  default:
-                     {
-                        OutputWindow.WriteLine("Unsupported item Kind " + item.Kind + ". This item won't be moved to the project " + targetProject.Name + ".");
-                        break;
-                     }
+                  switch (item.Kind)
+                  {
+                     case EnvDTE.Constants.vsProjectItemKindPhysicalFolder:
+                        {
+                           var directoryName = item.Name;
+                           OutputWindow.WriteLine("Moving directory " + directoryName + " from project " + sourceName + " into project " + targetName);
+                           var newDirectory = targetProjectItems.AddFolder(directoryName);
+                           MoveProjectItems(item.ProjectItems, newDirectory.ProjectItems, sourceName + "/" + directoryName, targetName + "/" + directoryName);
+                           OutputWindow.WriteLine("Moved directory " + directoryName + " from project " + sourceName + " into project " + targetName);
+                           break;
+                        };
+                     case EnvDTE.Constants.vsProjectItemKindPhysicalFile:
+                        {
+                           var fileName = item.FileNames[i];
+                           OutputWindow.WriteLine("Moving file " + fileName + " from project " + sourceName + " into project " + targetName);
+                           var newItem = targetProjectItems.AddFromFileCopy(fileName);
+                           OutputWindow.WriteLine("Moved file " + fileName + " from project " + sourceName + " into project " + targetName);
+                           break;
+                        };
+                     default:
+                        {
+                           OutputWindow.WriteLine("Unsupported item Kind " + item.Kind + ". This item won't be moved to the project " + targetName + ".");
+                           break;
+                        }
+                  }
                }
+               item.Delete();
+               OutputWindow.WriteLine("Moved item " + itemName + " from project " + sourceName + " into project " + targetName);
             }
-            item.Delete();
-            OutputWindow.WriteLine("Moved item " + itemName + " from project " + projectName + " into project " + targetProject.Name);
+            else
+            {
+               OutputWindow.WriteLine("Ignoring special item '" + item.Name + "'. This item cannot be migrated.");
+            }
          }
-         sourceProject.Save();
-         sourceProject.Delete();
-         OutputWindow.WriteLine("Merged project " + projectName + " into project " + targetProject.Name);
+      }
+
+      private bool CanBeMigrated(ProjectItem item)
+      {
+         return !(item.Kind == EnvDTE.Constants.vsProjectItemKindPhysicalFolder && item.Name == "Properties");
       }
 
       private string ToStringList(IEnumerable<Project> projects, Func<Project, string> selector = null)
