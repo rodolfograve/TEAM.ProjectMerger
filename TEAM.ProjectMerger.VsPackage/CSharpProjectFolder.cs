@@ -17,10 +17,10 @@ namespace TEAM.TEAM_ProjectMerger
 
       private readonly ProjectItem ProjectFolder;
 
-      public Task<IFolder> AddFolder(string directoryName)
+      public IFolder AddFolder(string directoryName)
       {
          var result = ProjectFolder.ProjectItems.AddFolder(directoryName);
-         return Task.FromResult((IFolder)new CSharpProjectFolder(result));
+         return new CSharpProjectFolder(result);
       }
 
       public void AddFromFileCopy(string filePath)

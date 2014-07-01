@@ -1,30 +1,30 @@
-﻿using EnvDTE;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VSLangProj;
 
 namespace TEAM.TEAM_ProjectMerger
 {
    public class CSharpProject : IFolder
    {
 
-      public CSharpProject(Project project)
+      public CSharpProject(VSProject vsProject)
       {
-         Project = project;
+         VsProject = vsProject;
       }
 
-      private readonly Project Project;
+      private readonly VSProject VsProject;
 
-      public Task<IFolder> AddFolder(string directoryName)
+      public IFolder AddFolder(string directoryName)
       {
-         var result = Project.ProjectItems.AddFolder(directoryName);
-         return Task.FromResult((IFolder)new CSharpProjectFolder(result));
+         var result = VsProject.Project.ProjectItems.AddFolder(directoryName);
+         return new CSharpProjectFolder(result);
       }
 
       public void AddFromFileCopy(string filePath)
       {
-         Project.ProjectItems.AddFromFileCopy(filePath);
+         VsProject.Project.ProjectItems.AddFromFileCopy(filePath);
       }
    }
 }

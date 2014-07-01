@@ -1,25 +1,30 @@
+using Microsoft.VisualStudio.VCProjectEngine;
 using System;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace TEAM.TEAM_ProjectMerger
 {
    public class VcppFilter : IFolder
    {
-      public VcppFilter(dynamic vcProjectFilter)
+      public VcppFilter(VCFilter vcProjectFilter)
       {
          VcProjectFilter = vcProjectFilter;
+         PhysicalDirectoryPath = vcProjectFilter.project.ProjectDirectory;
       }
 
-      private readonly dynamic VcProjectFilter;
+      private readonly VCFilter VcProjectFilter;
+      private readonly string PhysicalDirectoryPath;
 
-      public async Task<IFolder> AddFolder(string directoryName)
+      public IFolder AddFolder(string directoryName)
       {
-         return await VcProjectFilter.AddFilter(directoryName);
+         return VcProjectFilter.AddFilter(directoryName);
       }
 
-      public async void AddFromFileCopy(string filePath)
+      public void AddFromFileCopy(string filePath)
       {
-         await VcProjectFilter.AddFile(filePath);
+         var targetFilePath = Path.Combine(PhysicalDirectoryPath, Path.GetFileName(filePath));
+         File.Copy(filePath, targetFilePath, true);
+         VcProjectFilter.AddFile(targetFilePath);
       }
    }
 }

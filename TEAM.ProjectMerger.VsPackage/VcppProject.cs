@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualStudio.VCProjectEngine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace TEAM.TEAM_ProjectMerger
 {
@@ -16,15 +16,21 @@ namespace TEAM.TEAM_ProjectMerger
 
       private readonly VCProject VcProject;
 
-      public async Task<IFolder> AddFolder(string directoryName)
+      public IFolder AddFolder(string directoryName)
       {
-         var result = await VcProject.AddFilter(directoryName);
+         var result = FilterExtensions.FindFilter(VcProject.Filters, directoryName);
+         if (result == null)
+         {
+            result = VcProject.AddFilter(directoryName);
+         }
          return new VcppFilter(result);
       }
 
-      public async void AddFromFileCopy(string filePath)
+      public void AddFromFileCopy(string filePath)
       {
-         await VcProject.AddFile(filePath);
+         var targetFilePath = Path.Combine(VcProject.ProjectDirectory, Path.GetFileName(filePath));
+         File.Copy(filePath, targetFilePath, true);
+         VcProject.AddFile(targetFilePath);
       }
    }
 }

@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using System.Collections.Generic;
 using EnvDTE;
+using System.IO;
 
 namespace TEAM.TEAM_ProjectMerger
 {
@@ -117,16 +118,16 @@ namespace TEAM.TEAM_ProjectMerger
          }
       }
 
-      public async void MergeProjects(Project sourceProject, Project targetProject)
+      public void MergeProjects(Project sourceProject, Project targetProject)
       {
          var sourceProjectName = sourceProject.Name;
          OutputWindow.WriteLine("Merging project " + sourceProjectName + " into project " + targetProject.Name);
          sourceProject.Save();
 
-         var targetProjectStrategy = new CSharpProject(targetProject);
+         var targetProjectStrategy = FolderFactory.Create(targetProject);
 
          // Create a directory in the targetProject in order to keep a similar structure
-         var targetDirectory = await targetProjectStrategy.AddFolder(sourceProject.Name);
+         var targetDirectory = targetProjectStrategy.AddFolder(sourceProject.Name);
 
          MoveProjectItems(sourceProject.ProjectItems, targetDirectory, sourceProject.Name, targetProject.Name + "/" + sourceProjectName);
 
@@ -135,11 +136,14 @@ namespace TEAM.TEAM_ProjectMerger
 
          Dte.Solution.Remove(sourceProject);
 
-         OutputWindow.WriteLine("Merged project " + sourceProjectName + " into project " + targetProject.Name);
+         MessageBox("Merged project " + sourceProjectName + " into project " + targetProject.Name);
       }
 
-      private async void MoveProjectItems(ProjectItems sourceProjectItems, IFolder targetFolder, string sourceName, string targetName)
+      private void MoveProjectItems(ProjectItems sourceProjectItems, IFolder targetFolder, string sourceName, string targetName)
       {
+         // Keep a list of items that have been moved so that we don't modify the sourceProjectItems enumerable.
+         var itemsToDeleteFromSource = new List<ProjectItem>();
+
          foreach (ProjectItem item in sourceProjectItems)
          {
             string itemName = item.Name;
@@ -150,48 +154,52 @@ namespace TEAM.TEAM_ProjectMerger
 
             if (CanBeMigrated(item))
             {
-               OutputWindow.WriteLine("Moving item " + itemName + " from project " + sourceName + " into project " + targetName);
+               OutputWindow.WriteLine("Copying item " + itemName + " from project " + sourceName + " into project " + targetName + "...");
                for (short i = 0; i < item.FileCount; i++)
                {
-                  switch (item.Kind)
+                  if (item.IsPhysicalDirectory())
                   {
-                     case EnvDTE.Constants.vsProjectItemKindPhysicalFolder:
-                        {
-                           var directoryName = item.Name;
-                           OutputWindow.WriteLine("Moving directory " + directoryName + " from project " + sourceName + " into project " + targetName);
-                           var newDirectory = await targetFolder.AddFolder(directoryName);
-                           MoveProjectItems(item.ProjectItems, newDirectory, sourceName + "/" + directoryName, targetName + "/" + directoryName);
-                           OutputWindow.WriteLine("Moved directory " + directoryName + " from project " + sourceName + " into project " + targetName);
-                           break;
-                        };
-                     case EnvDTE.Constants.vsProjectItemKindPhysicalFile:
-                        {
-                           var fileName = item.FileNames[i];
-                           OutputWindow.WriteLine("Moving file " + fileName + " from project " + sourceName + " into project " + targetName);
-                           targetFolder.AddFromFileCopy(fileName);
-                           OutputWindow.WriteLine("Moved file " + fileName + " from project " + sourceName + " into project " + targetName);
-                           break;
-                        };
-                     default:
-                        {
-                           OutputWindow.WriteLine("Unsupported item Kind " + item.Kind + ". This item won't be moved to the project " + targetName + ".");
-                           break;
-                        }
+                     var directoryName = item.Name;
+                     OutputWindow.WriteLine("Copying directory " + directoryName + " from project " + sourceName + " into project " + targetName + "...");
+                     var newDirectory = targetFolder.AddFolder(directoryName);
+                     MoveProjectItems(item.ProjectItems, newDirectory, sourceName + "/" + directoryName, targetName + "/" + directoryName);
+                     OutputWindow.WriteLine("Copied directory " + directoryName + " from project " + sourceName + " into project " + targetName + ".");
+                  }
+                  else if (item.IsPhysicalFile())
+                  {
+                     var fileName = item.FileNames[i];
+                     OutputWindow.WriteLine("Copying file " + fileName + " from project " + sourceName + " into project " + targetName + "...");
+                     targetFolder.AddFromFileCopy(fileName);
+                     OutputWindow.WriteLine("Copied file " + fileName + " from project " + sourceName + " into project " + targetName + ".");
+                  }
+                  else
+                  {
+                     OutputWindow.WriteLine("Unsupported item Kind " + item.Kind + ". This item won't be moved to the project " + targetName + ".");
                   }
                }
-               item.Delete();
-               OutputWindow.WriteLine("Moved item " + itemName + " from project " + sourceName + " into project " + targetName);
+               itemsToDeleteFromSource.Add(item);
+               OutputWindow.WriteLine("Copied item " + itemName + " from project " + sourceName + " into project " + targetName);
             }
             else
             {
                OutputWindow.WriteLine("Ignoring special item '" + item.Name + "'. This item cannot be migrated.");
             }
          }
+
+         foreach (var item in itemsToDeleteFromSource)
+         {
+            OutputWindow.WriteLine("Deleting item '" + item.Name + "' from source project...");
+            item.Delete();
+            OutputWindow.WriteLine("Deleted item '" + item.Name + "' from source project.");
+         }
       }
 
       private bool CanBeMigrated(ProjectItem item)
       {
-         return !(item.Kind == EnvDTE.Constants.vsProjectItemKindPhysicalFolder && item.Name == "Properties");
+         return
+            !(item.ContainingProject.IsCSharp() && item.IsPhysicalDirectory() && item.Name == "Properties") &&
+            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && Path.GetExtension(item.Name) == ".filters") &&
+            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && (Path.GetFileName(item.Name) == "stdafx.cpp" || Path.GetFileName(item.Name) == "stdafx.h"));
       }
 
       private void MessageBox(string message)

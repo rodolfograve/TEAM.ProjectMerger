@@ -7,7 +7,7 @@ namespace TEAM.TEAM_ProjectMerger
 {
    public interface IFolder
    {
-      Task<IFolder> AddFolder(string directoryName);
+      IFolder AddFolder(string directoryName);
       void AddFromFileCopy(string filePath);
    }
 }
