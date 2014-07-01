@@ -141,9 +141,10 @@
   <ItemGroup>
     <Compile Include="CSharpProject.cs" />
     <Compile Include="FilterExtensions.cs" />
-    <Compile Include="FolderFactory.cs" />
+    <Compile Include="ProjectStrategyFactory.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="IFolder.cs" />
+    <Compile Include="IProject.cs" />
     <Compile Include="ProjectExtensions.cs" />
     <Compile Include="MonitorSelection.cs" />
     <Compile Include="OutputWindow.cs" />

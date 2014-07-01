@@ -6,15 +6,17 @@ using System.Linq;
 
 namespace TEAM.TEAM_ProjectMerger
 {
-   public class VcppProject : IFolder
+   public class VcppProject : IProject
    {
 
-      public VcppProject(VCProject vcProject)
+      public VcppProject(VCProject vcProject, OutputWindow outputWindow)
       {
          VcProject = vcProject;
+         OutputWindow = outputWindow;
       }
 
       private readonly VCProject VcProject;
+      private readonly OutputWindow OutputWindow;
 
       public IFolder AddFolder(string directoryName)
       {
@@ -32,5 +34,23 @@ namespace TEAM.TEAM_ProjectMerger
          File.Copy(filePath, targetFilePath, true);
          VcProject.AddFile(targetFilePath);
       }
+
+      public void MergeReferences(IProject otherProject)
+      {
+         var other = otherProject as VcppProject;
+         if (other == null) throw new ArgumentException("VC++ projects can only be merged with other VC++ projects. Merging with " + otherProject.GetType() + " is not supported.");
+
+         OutputWindow.WriteLine("Merging references is not yet supported for VC++ projects.");
+
+         //var references = other.VcProject.VCReferences;
+         //for (int i = 1; i <= references.Count; i++)
+         //{
+         //   VCReference reference = references.Item(i);
+         //   OutputWindow.WriteLine("Copying reference " + reference.Name + "...");
+         //   VcProject.VCReferences.Add(reference);
+         //   OutputWindow.WriteLine("Copied reference " + reference.Name + ".");
+         //}
+      }
+
    }
 }

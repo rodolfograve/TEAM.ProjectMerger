@@ -124,7 +124,8 @@ namespace TEAM.TEAM_ProjectMerger
          OutputWindow.WriteLine("Merging project " + sourceProjectName + " into project " + targetProject.Name);
          sourceProject.Save();
 
-         var targetProjectStrategy = FolderFactory.Create(targetProject);
+         var targetProjectStrategy = ProjectStrategyFactory.Create(targetProject, OutputWindow);
+         var sourceProjectStrategy = ProjectStrategyFactory.Create(sourceProject, OutputWindow);
 
          // Create a directory in the targetProject in order to keep a similar structure
          var targetDirectory = targetProjectStrategy.AddFolder(sourceProject.Name);
@@ -133,6 +134,13 @@ namespace TEAM.TEAM_ProjectMerger
 
          targetProject.Save();
          sourceProject.Save();
+
+         OutputWindow.WriteLine("Files have been merged. Merging references now...");
+         targetProjectStrategy.MergeReferences(sourceProjectStrategy);
+
+         targetProject.Save();
+         sourceProject.Save();
+         OutputWindow.WriteLine("Merged references.");
 
          Dte.Solution.Remove(sourceProject);
 
@@ -188,9 +196,10 @@ namespace TEAM.TEAM_ProjectMerger
 
          foreach (var item in itemsToDeleteFromSource)
          {
-            OutputWindow.WriteLine("Deleting item '" + item.Name + "' from source project...");
+            var itemName = item.Name;
+            OutputWindow.WriteLine("Deleting item '" + itemName + "' from source project...");
             item.Delete();
-            OutputWindow.WriteLine("Deleted item '" + item.Name + "' from source project.");
+            OutputWindow.WriteLine("Deleted item '" + itemName + "' from source project.");
          }
       }
 
@@ -198,8 +207,7 @@ namespace TEAM.TEAM_ProjectMerger
       {
          return
             !(item.ContainingProject.IsCSharp() && item.IsPhysicalDirectory() && item.Name == "Properties") &&
-            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && Path.GetExtension(item.Name) == ".filters");// &&
-            //!(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && (Path.GetFileName(item.Name) == "stdafx.cpp" || Path.GetFileName(item.Name) == "stdafx.h"));
+            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && Path.GetExtension(item.Name) == ".filters");
       }
 
       private void MessageBox(string message)
