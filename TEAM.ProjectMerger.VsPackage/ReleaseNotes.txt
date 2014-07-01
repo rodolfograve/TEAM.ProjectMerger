@@ -1,0 +1,7 @@
+﻿v0.0.1
+This is a very early version that should be able to merge C# projects (including references) and VC++ projects (references are currently not merged).
+
+It's recommended that you commit everything into your source control system so that you can easily spot the changes and revert back to the original state if necessary.
+
+Simply select all the projects you want to merge and click on the "Merge Projects" option. Projects will be merged into the first selected project (in the future there will be dialog to choose the target project).
+

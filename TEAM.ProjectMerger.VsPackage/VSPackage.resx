@@ -1,14 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!--
-    VS SDK Notes: This resx file contains the resources that will be consumed from your package by Visual Studio.
-    For example, Visual Studio will attempt to load resource '400' from this resource stream when it needs to
-    load your package's icon. Because Visual Studio will always look in the VSPackage.resources stream first for
-    resources it needs, you should put additional resources that Visual Studio will load directly into this resx 
-    file. 
-
-    Resources that you would like to access directly from your package in a strong-typed fashion should be stored 
-    in Resources.resx or another resx file.
--->
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -127,15 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="110" xml:space="preserve">
     <value>TEAM.ProjectMerger</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>The number of projects in a solution negatively affects the build time. Since modularisation is good there is a trade-off between these 2. Using folders and namespaces instead of projects is another way to achieve modularisation.
+    <value>Merge multiple projects into one.
 
-This VSPackage attempts to provide help when trying to optimise the solution structure by automating the process of merging multiple projects into one which is one of the main deterrents to experiment with the solution structure.</value>
+The number of projects in a solution negatively affects the build time. Since modularisation is good there needs to be a trade-off between these two. Using folders and namespaces instead of projects is another way to achieve modularisation.
+
+This Visual Studio Extension attempts to help by automating the process of merging multiple projects into one. Since this process is tedious, time consuming and error prone is usually one of the main deterrents to experimenting with the solution structure.</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Package.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
