@@ -23,7 +23,7 @@ namespace TEAM.TEAM_ProjectMerger
          {
             result = VcProject.AddFilter(directoryName);
          }
-         return new VcppFilter(result);
+         return new VcppFilter(result, Path.Combine(VcProject.ProjectDirectory, directoryName));
       }
 
       public void AddFromFileCopy(string filePath)

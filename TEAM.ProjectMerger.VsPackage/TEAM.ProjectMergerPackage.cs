@@ -198,8 +198,8 @@ namespace TEAM.TEAM_ProjectMerger
       {
          return
             !(item.ContainingProject.IsCSharp() && item.IsPhysicalDirectory() && item.Name == "Properties") &&
-            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && Path.GetExtension(item.Name) == ".filters") &&
-            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && (Path.GetFileName(item.Name) == "stdafx.cpp" || Path.GetFileName(item.Name) == "stdafx.h"));
+            !(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && Path.GetExtension(item.Name) == ".filters");// &&
+            //!(item.ContainingProject.IsCpp() && item.IsPhysicalFile() && (Path.GetFileName(item.Name) == "stdafx.cpp" || Path.GetFileName(item.Name) == "stdafx.h"));
       }
 
       private void MessageBox(string message)

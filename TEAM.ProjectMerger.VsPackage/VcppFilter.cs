@@ -6,10 +6,10 @@ namespace TEAM.TEAM_ProjectMerger
 {
    public class VcppFilter : IFolder
    {
-      public VcppFilter(VCFilter vcProjectFilter)
+      public VcppFilter(VCFilter vcProjectFilter, string physicalDirectoryPath)
       {
          VcProjectFilter = vcProjectFilter;
-         PhysicalDirectoryPath = vcProjectFilter.project.ProjectDirectory;
+         PhysicalDirectoryPath = physicalDirectoryPath;
       }
 
       private readonly VCFilter VcProjectFilter;
@@ -17,12 +17,13 @@ namespace TEAM.TEAM_ProjectMerger
 
       public IFolder AddFolder(string directoryName)
       {
-         return VcProjectFilter.AddFilter(directoryName);
+         return new VcppFilter(VcProjectFilter.AddFilter(directoryName), Path.Combine(PhysicalDirectoryPath, directoryName));
       }
 
       public void AddFromFileCopy(string filePath)
       {
          var targetFilePath = Path.Combine(PhysicalDirectoryPath, Path.GetFileName(filePath));
+         Directory.CreateDirectory(PhysicalDirectoryPath);
          File.Copy(filePath, targetFilePath, true);
          VcProjectFilter.AddFile(targetFilePath);
       }
